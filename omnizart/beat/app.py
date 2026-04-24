@@ -59,6 +59,13 @@ class BeatTranscription(BaseTranscription):
         if not os.path.isfile(input_audio):
             raise FileNotFoundError(f"The given audio path does not exist. Path: {input_audio}")
 
+        if not input_audio.lower().endswith((".mid", ".midi")):
+            raise ValueError(
+                f"Beat transcription only supports MIDI files (.mid, .midi). "
+                f"Got: {input_audio}\n"
+                f"Hint: Use 'omnizart music transcribe' first to convert audio to MIDI."
+            )
+
         logger.info("Loading model...")
         model, model_settings = self._load_model(model_path, custom_objects=self.custom_objects)
 

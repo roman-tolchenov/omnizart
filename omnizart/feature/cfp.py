@@ -222,7 +222,7 @@ def _extract_cfp(
 
     Hop = round(down_fs * hop)
     x = x.astype("float32")
-    h = scipy.signal.blackmanharris(win_size)  # window size
+    h = scipy.signal.windows.blackmanharris(win_size)  # window size
     g = np.array(g)
 
     samples = np.floor(len(x) / Hop).astype("int")

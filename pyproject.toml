@@ -1,13 +1,13 @@
-[tool.poetry]
+[project]
 name = "omnizart"
 version = "0.5.0"
 description = "Omniscient Mozart, being able to transcribe everything in the music."
 readme = "README.md"
-authors = ["BreezeWhite <miyashita2010@tuta.io>", "yjlolo <yjlolo125@gmail.com>"]
-license = "MIT"
-repository = "https://github.com/Music-and-Culture-Technology-Lab/omnizart"
-documentation = "https://music-and-culture-technology-lab.github.io/omnizart-doc/"
-homepage = "https://sites.google.com/view/mctl/home"
+authors = [
+    {name = "BreezeWhite", email = "miyashita2010@tuta.io"},
+    {name = "yjlolo", email = "yjlolo125@gmail.com"},
+]
+requires-python = ">=3.6.1"
 keywords = ["automatic music transcription", "drum transcription", "vocal transcription", "beat tracking"]
 classifiers = [
     "Topic :: Multimedia :: Sound/Audio :: MIDI",
@@ -16,50 +16,56 @@ classifiers = [
     "Topic :: Software Development :: Version Control :: Git",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
-
 ]
-exclude = ["weights*"]
+dependencies = [
+    "click>=7.1.2",
+    "jsonschema>=3.2.0",
+    "librosa>=0.8.0,<0.9.0",
+    "numba>=0.55.0",
+    "madmom>=0.16.1,<0.17.0",
+    "mir_eval>=0.6",
+    "pillow>=8.3.2",
+    "pretty_midi>=0.2.9",
+    "pyfluidsynth>=1.2.5",
+    "pyyaml>=5.3.1",
+    "spleeter>=2.3.0,<3.0.0",
+    "tensorflow>=2.10.0,<3.0.0",
+    "tqdm>=4.49.0",
+    "urllib3>=1.26.4",
+    "setuptools<72",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.6.1,<3.9"
-click = "^7.1.2"
-pretty_midi = "^0.2.9"
-librosa = "^0.8.0"
-madmom = "^0.16.1"
-pillow = "^8.3.2"
-pyyaml = "^5.3.1"
-jsonschema = "^3.2.0"
-tqdm = "^4.49.0"
-pyfluidsynth = "^1.2.5"
-vamp = "^1.1.0"
-urllib3 = "1.26.4"
-spleeter = "^2.3.0"
-mir_eval = "^0.6"
-tensorflow = "2.5.0"
+[project.urls]
+Repository = "https://github.com/Music-and-Culture-Technology-Lab/omnizart"
+Documentation = "https://music-and-culture-technology-lab.github.io/omnizart-doc/"
+Homepage = "https://sites.google.com/view/mctl/home"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-flake8 = "^3.8.3"
-pylint = "^2.5.3"
-black = "^19.10b0"
-numpydoc = "^1.1.0"
-yapf = "^0.30.0"
-sphinx-press-theme = "^0.5.1"
-pytest-cov = "^2.10.1"
-pytest-mock = "^3.3.1"
-sphinx-click = "^2.5.0"
-sphinxcontrib-bibtex = "^1.0.0"
+[project.scripts]
+omnizart = "omnizart.cli.cli:entry"
 
-[tool.poetry.scripts]
-omnizart = 'omnizart.cli.cli:entry'
+[project.optional-dependencies]
+dev = [
+    "pytest>=5.2",
+    "flake8>=3.8.3",
+    "pylint>=2.5.3",
+    "black>=19.10b0",
+    "numpydoc>=1.1.0",
+    "yapf>=0.30.0",
+    "sphinx-press-theme>=0.5.1",
+    "pytest-cov>=2.10.1",
+    "pytest-mock>=3.3.1",
+    "sphinx-click>=2.5.0",
+    "sphinxcontrib-bibtex>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["omnizart*"]
 
 [tool.black]
 line-length = 120
 target-version = ['py36']
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
-
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
