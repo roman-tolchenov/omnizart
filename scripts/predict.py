@@ -17,10 +17,6 @@ from omnizart.beat import app as bapp
 from omnizart.chord import app as capp
 from omnizart.drum import app as dapp
 from omnizart.music import app as mapp
-from omnizart.vocal import app as vapp
-from omnizart.vocal_contour import app as vcapp
-
-
 class Predictor(cog.Predictor):
     def setup(self):
         self.SF2_FILE = "general_soundfont.sf2"
@@ -31,7 +27,7 @@ class Predictor(cog.Predictor):
                 file_length=215614036,
                 save_name=self.SF2_FILE,
             )
-        self.app = {"music": mapp, "chord": capp, "drum": dapp, "vocal": vapp, "vocal-contour": vcapp, "beat": bapp}
+        self.app = {"music": mapp, "chord": capp, "drum": dapp, "beat": bapp}
         self.model_path = {"piano": "Piano", "piano-v2": "PianoV2", "assemble": "Stream", "pop-song": "Pop", "": None}
 
     @cog.input(
@@ -43,7 +39,7 @@ class Predictor(cog.Predictor):
         "mode",
         type=str,
         default="music-piano-v2",
-        options=["music-piano", "music-piano-v2", "music-assemble", "chord", "drum", "vocal", "vocal-contour", "beat"],
+        options=["music-piano", "music-piano-v2", "music-assemble", "chord", "drum", "beat"],
         help="Transcription mode",
     )
     def predict(self, audio, mode):
@@ -67,13 +63,10 @@ class Predictor(cog.Predictor):
             model_path = self.model_path[model]
             midi = app.transcribe(wav_file_path, model_path=model_path)
 
-            if mode == "vocal-contour":
-                out_name = f"{audio_name}_trans.wav"
-            else:
-                print("Synthesizing MIDI...")
-                out_name = f"{temp_folder}/{audio_name}_synth.wav"
-                raw_wav = midi.fluidsynth(fs=44100, sf2_path=self.SF2_FILE)
-                wave.write(out_name, 44100, raw_wav)
+            print("Synthesizing MIDI...")
+            out_name = f"{temp_folder}/{audio_name}_synth.wav"
+            raw_wav = midi.fluidsynth(fs=44100, sf2_path=self.SF2_FILE)
+            wave.write(out_name, 44100, raw_wav)
 
             out_path = Path(tempfile.mkdtemp()) / "out.mp3"  # out_path is automatically cleaned up by cog
             subprocess.run(["ffmpeg", "-y", "-i", out_name, str(out_path)])

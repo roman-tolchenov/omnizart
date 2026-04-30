@@ -23,6 +23,7 @@ all_weights/
 .cookie
 *.code-workspace
 *.pickle
+uv.lock
 
 # Transcription results
 *.mid

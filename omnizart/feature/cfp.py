@@ -20,7 +20,7 @@ def STFT(x, fr, fs, Hop, h):
     window_size = len(h)
     f = fs * np.linspace(0, 0.5, np.round(N / 2).astype("int"), endpoint=True)
     Lh = int(np.floor(float(window_size - 1) / 2))
-    tfr = np.zeros((int(N), len(t)), dtype=np.float)
+    tfr = np.zeros((int(N), len(t)), dtype=float)
 
     for icol, ti in enumerate(t):
         ti = int(ti)
@@ -60,7 +60,7 @@ def freq_to_log_freq_mapping(tfr, f, fr, fc, tc, NumPerOct):
             break
 
     Nest = len(central_freq)
-    freq_band_transformation = np.zeros((Nest - 1, len(f)), dtype=np.float)
+    freq_band_transformation = np.zeros((Nest - 1, len(f)), dtype=float)
     for i in range(1, Nest - 1):
         left = int(round(central_freq[i - 1] / fr))
         right = int(round(central_freq[i + 1] / fr) + 1)
@@ -92,7 +92,7 @@ def quef_to_log_freq_mapping(ceps, q, fs, fc, tc, NumPerOct):
             break
     f = 1 / (q+1e-9)
     Nest = len(central_freq)
-    freq_band_transformation = np.zeros((Nest - 1, len(f)), dtype=np.float)
+    freq_band_transformation = np.zeros((Nest - 1, len(f)), dtype=float)
     for i in range(1, Nest - 1):
         for j in range(int(round(fs / central_freq[i + 1])), int(round(fs / central_freq[i - 1]) + 1)):
             if f[j] > central_freq[i - 1] and f[j] < central_freq[i]:
@@ -303,52 +303,6 @@ def extract_cfp(filename, down_fs=44100, **kwargs):
     logger.debug("Loading audio: %s", filename)
     x, fs = load_audio(filename, sampling_rate=down_fs)
     return _extract_cfp(x, fs, down_fs=fs, **kwargs)
-
-
-def _extract_vocal_cfp(
-    x,
-    fs,
-    hop=0.02,
-    fr=2.0,
-    fc=80.0,
-    tc=1/1000,
-    **kwargs
-):
-    logger.debug("Extract three types of CFP with different window sizes.")
-    high_z, high_spec, _, _, _ = _extract_cfp(x, fs, win_size=743, hop=hop, fr=fr, fc=fc, tc=tc, **kwargs)
-    med_z, med_spec, _, _, _ = _extract_cfp(x, fs, win_size=372, hop=hop, fr=fr, fc=fc, tc=tc, **kwargs)
-    low_z, low_spec, _, _, _ = _extract_cfp(x, fs, win_size=186, hop=hop, fr=fr, fc=fc, tc=tc, **kwargs)
-
-    # Normalize Z
-    high_z_norm = (high_z - np.mean(high_z)) / np.std(high_z)
-    med_z_norm = (med_z - np.mean(med_z)) / np.std(med_z)
-    low_z_norm = (low_z - np.mean(low_z)) / np.std(low_z)
-
-    # Spectral flux
-    high_flux = spectral_flux(high_spec)
-    med_flux = spectral_flux(med_spec)
-    low_flux = spectral_flux(low_spec)
-
-    # Inverse spectral flux
-    high_inv_flux = spectral_flux(high_spec, invert=True)
-    med_inv_flux = spectral_flux(med_spec, invert=True)
-    low_inv_flux = spectral_flux(low_spec, invert=True)
-
-    # Collect and concat
-    flux = np.dstack([low_flux, med_flux, high_flux])
-    inv_flux = np.dstack([low_inv_flux, med_inv_flux, high_inv_flux])
-    z_norm = np.dstack([low_z_norm, med_z_norm, high_z_norm])
-
-    output = np.dstack([flux, inv_flux, z_norm])
-    return np.transpose(output, axes=[1, 0, 2])  # time x feat x channel
-
-
-def extract_vocal_cfp(filename, down_fs=16000, **kwargs):
-    """Specialized CFP feature extraction for vocal submodule."""
-    logger.debug("Loading audio: %s", filename)
-    x, fs = load_audio(filename, sampling_rate=down_fs)
-    logger.debug("Extracting vocal feature")
-    return _extract_vocal_cfp(x, fs, **kwargs)
 
 
 def extract_patch_cfp(

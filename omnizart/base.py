@@ -9,9 +9,11 @@ import random
 from os.path import join as jpath
 from abc import ABCMeta, abstractmethod
 
+import json
+
 import h5py
+import yaml
 import tensorflow as tf
-from tensorflow.keras.models import model_from_yaml
 
 from omnizart import MODULE_PATH
 from omnizart.utils import get_logger, ensure_path_exists, get_filename
@@ -19,6 +21,32 @@ from omnizart.constants.midi import LOWEST_MIDI_NOTE, HIGHEST_MIDI_NOTE
 
 
 logger = get_logger("Base Class")
+
+
+class _SavedModelWrapper:
+    """Wraps TFSMLayer to expose the input_shape and predict() expected by the rest of the codebase."""
+
+    def __init__(self, tfsm_layer, model_path):
+        self._layer = tfsm_layer
+        self._model_path = model_path
+        self.__input_shape = None
+
+    @property
+    def input_shape(self):
+        if self.__input_shape is None:
+            sm = tf.saved_model.load(self._model_path)
+            sig = sm.signatures.get("serving_default")
+            if sig is None:
+                raise AttributeError("SavedModel has no 'serving_default' signature")
+            specs = list(sig.structured_input_signature[1].values())
+            self.__input_shape = tuple(specs[0].shape.as_list())
+        return self.__input_shape
+
+    def predict(self, x, **_):
+        result = self._layer(x)
+        if isinstance(result, dict):
+            result = list(result.values())[0]
+        return result.numpy() if hasattr(result, "numpy") else result
 
 
 class BaseTranscription(metaclass=ABCMeta):
@@ -61,8 +89,9 @@ class BaseTranscription(metaclass=ABCMeta):
         settings = self.setting_class(conf_path=conf_path)
 
         try:
-            model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
-        except (OSError):
+            layer = tf.keras.layers.TFSMLayer(model_path, call_endpoint='serving_default')
+            model = _SavedModelWrapper(layer, model_path)
+        except OSError:
             raise FileNotFoundError(
                 f"Checkpoint file not found: {model_path}/variables/variables.data*. Perhaps not yet downloaded?\n"
                 "Try execute 'omnizart download-checkpoints'"
@@ -98,7 +127,9 @@ class BaseTranscription(metaclass=ABCMeta):
         return model_path, conf_path
 
     def _get_model_from_yaml(self, arch_path, custom_objects=None):  # pylint: disable=R0201
-        return model_from_yaml(open(arch_path).read(), custom_objects=custom_objects)
+        with open(arch_path) as f:
+            config = yaml.safe_load(f)
+        return tf.keras.models.model_from_json(json.dumps(config), custom_objects=custom_objects)
 
     def _resolve_feature_output_path(self, dataset_path, settings):  # pylint: disable=R0201
         if settings.dataset.feature_save_path == "+":

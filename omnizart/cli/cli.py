@@ -21,8 +21,6 @@ from omnizart.constants.midi import SOUNDFONT_PATH
 from omnizart.cli.music import music
 from omnizart.cli.drum import drum
 from omnizart.cli.chord import chord
-from omnizart.cli.vocal import vocal
-from omnizart.cli.vocal_contour import vocal_contour
 from omnizart.cli.beat import beat
 from omnizart.cli.patch_cnn import patch_cnn
 from omnizart.cli.transcribe import transcribe
@@ -31,7 +29,7 @@ from omnizart.cli.transcribe import transcribe
 SUB_COMMAND_GROUP = [
     {
         "Transcription": [
-            "music", "chord", "drum", "vocal", "vocal-contour", "beat", "patch-cnn", "transcribe"
+            "music", "chord", "drum", "beat", "patch-cnn", "transcribe"
         ]
     },
     {"Utilities": ["download-checkpoints", "download-dataset", "synth"]}
@@ -81,7 +79,7 @@ def entry():
 @click.command()
 @click.argument(
     "dataset",
-    type=click.Choice(["Maestro", "MusicNet", "McGill", "BPS-FH", "Ext-Su", "MIR1K", "CMedia"], case_sensitive=False)
+    type=click.Choice(["Maestro", "MusicNet", "McGill", "BPS-FH", "Ext-Su"], case_sensitive=False)
 )
 @click.option(
     "-o", "--output", default="./", help="Path for saving the downloaded dataset.", type=click.Path(writable=True)
@@ -94,8 +92,6 @@ def download_dataset(dataset, output):
         "mcgill": dset.McGillBillBoard,
         "bps-fh": dset.BeethovenSonatasStructure,
         "ext-su": dset.ExtSuStructure,
-        "mir1k": dset.MIR1KStructure,
-        "cmedia": dset.CMediaStructure
     }[dataset.lower()]
     click.echo(f"Downloading {dataset} dataset and save to {output}")
     struct.download(save_path=output)
@@ -130,14 +126,6 @@ def download_checkpoints(output_path):
         "music_note_stream": {
             "fid": f"{release_url}/music_note_stream@variables.data-00000-of-00001",
             "save_as": "checkpoints/music/music_note_stream/variables/variables.data-00000-of-00001",
-        },
-        "vocal_semi": {
-            "fid": f"{release_url}/vocal_semi@variables.data-00000-of-00001",
-            "save_as": "checkpoints/vocal/vocal_semi/variables/variables.data-00000-of-00001",
-        },
-        "vocal_contour": {
-            "fid": f"{release_url}/contour@variables.data-00000-of-00001",
-            "save_as": "checkpoints/vocal/vocal_contour/variables/variables.data-00000-of-00001",
         },
         "beat": {
             "fid": f"{release_url}/beat_blstm@variables.data-00000-of-00001",
@@ -217,8 +205,6 @@ def synth(input_midi, output_path, sf2_path):
 entry.add_command(music)
 entry.add_command(drum)
 entry.add_command(chord)
-entry.add_command(vocal)
-entry.add_command(vocal_contour)
 entry.add_command(beat)
 entry.add_command(patch_cnn)
 entry.add_command(transcribe)

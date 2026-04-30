@@ -5,12 +5,9 @@ import pickle
 import yaml
 import librosa
 
-from omnizart.utils import ensure_path_exists, LazyLoader, get_logger
+from omnizart.utils import ensure_path_exists, get_logger
 
 
-# Lazy load the Spleeter pacakge for avoiding pulling large dependencies
-# and boosting the import speed.
-adapter = LazyLoader("adapter", globals(), "spleeter.audio.adapter")
 logger = get_logger("IO")
 
 
@@ -51,10 +48,7 @@ def load_pickle(pickle_file):
 
 
 def load_audio(audio_path, sampling_rate=44100, mono=True):
-    """Load audio with spleeter.
-
-    A much faster and general approach for loading audio comparing to use librosa.
-    This function also allows to read .mp3 files.
+    """Load audio from the given path.
 
     Parameters
     ----------
@@ -72,21 +66,7 @@ def load_audio(audio_path, sampling_rate=44100, mono=True):
     fs: int
         Sampling rate of the audio. Will be the same as the given ``sampling_rate``.
     """
-    try:
-        audio_loader = adapter.AudioAdapter.default()
-        audio, fs = audio_loader.load(audio_path, sample_rate=sampling_rate)
-        if mono:
-            audio = librosa.to_mono(audio.squeeze().T)
-
-    except (ImportError, adapter.SpleeterError) as error:
-        logger.warning(
-            "Failed to load audio with Spleeter due to '%s'. Continue to use Librosa.", str(error)
-        )
-        audio, fs = load_audio_with_librosa(audio_path, sampling_rate=sampling_rate, mono=mono)
-        if not mono:
-            audio = audio.T
-
-    return audio, fs
+    return load_audio_with_librosa(audio_path, sampling_rate=sampling_rate, mono=mono)
 
 
 def load_audio_with_librosa(audio_path, sampling_rate=44100, mono=True):
